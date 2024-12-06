@@ -34,14 +34,7 @@ def get_groq_chat_response(messages):
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get('message')
     messages = request.json.get('messages', [])  # Receive the current chat history as well
-
-    if not user_message:
-        return jsonify({"error": "No message provided"}), 400
-
-    # Add user message to the history
-    messages.append({"role": "user", "content": user_message})
 
     # Get AI response from Groq
     ai_response = get_groq_chat_response(messages)
