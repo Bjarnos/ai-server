@@ -5,7 +5,7 @@ from flask_cors import CORS
 import dotenv
 
 app = Flask(__name__)
-CORS(app, origins=["https://bjarnos.github.io"], methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
+CORS(app, origins="*")
 
 # Groq API config
 dotenv.load_dotenv()
