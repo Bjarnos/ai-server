@@ -1,52 +1,57 @@
 import os
-import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from groq import Groq
 import dotenv
 
+# Initialize Flask app and CORS
 app = Flask(__name__)
-CORS(app, origins="*")
+CORS(app, resources={r"/chat": {"origins": "https://bjarnos.github.io"}})
 
-# Groq API config
+# Load environment variables
 dotenv.load_dotenv()
-GROQ_API_KEY = os.environ.get('api_key')
-GROQ_API_URL = 'https://api.groq.ai/v1/chat/completions'
+
+# Initialize Groq client
+client = Groq(
+    api_key=os.environ.get("api_key"),  # Ensure this matches your .env key
+)
 
 # Function to interact with the Groq API
 def get_groq_chat_response(messages):
-    headers = {
-        'Authorization': f'Bearer {GROQ_API_KEY}',
-        'Content-Type': 'application/json'
-    }
-    data = {
-        "messages": messages,
-        "model": "llama-3.1-8b-instant"  # You can modify the model name as needed
-    }
-
     try:
-        response = requests.post(GROQ_API_URL, json=data, headers=headers)
-        response_data = response.json()
-        bot_response = response_data['choices'][0]['message']['content'] if response_data else "Sorry, I couldn't process your request."
-        return bot_response
-    except requests.exceptions.RequestException as e:
+        # Send messages to Groq API
+        chat_completion = client.chat.completions.create(
+            messages=messages,
+            model="llama3-8b-8192"  # Use the correct model name as per Groq documentation
+        )
+        
+        # Extract and return the assistant's response
+        return chat_completion.choices[0].message.content
+    except Exception as e:
         print(f"Error: {e}")
         return "An error occurred while processing the request."
 
+# Define the chat endpoint
 @app.route('/chat', methods=['POST'])
 def chat():
-    messages = request.json.get('messages', [])  # Receive the current chat history as well
+    # Extract messages from the request body
+    messages = request.json.get('messages', [])
+    
+    if not messages:
+        return jsonify({"error": "No messages provided"}), 400
 
     # Get AI response from Groq
     ai_response = get_groq_chat_response(messages)
 
-    # Add AI response to the history
+    # Add the assistant's response to the message history
     messages.append({"role": "assistant", "content": ai_response})
 
-    # Return the AI response and the updated history
+    # Return the assistant's response and updated message history
     return jsonify({
         "response": ai_response,
-        "messages": messages  # Returning updated history for the client to maintain
+        "messages": messages
     })
 
+# Start the Flask server
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
