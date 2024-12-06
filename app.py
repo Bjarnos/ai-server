@@ -1,6 +1,8 @@
+import os
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import dotenv
 
 app = Flask(__name__)
 CORS(app, origins=["https://bjarnos.github.io"])
