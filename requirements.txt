@@ -1,6 +1,5 @@
 Flask
 flask-cors
-Requests
 gunicorn
 python-dotenv
 groq
